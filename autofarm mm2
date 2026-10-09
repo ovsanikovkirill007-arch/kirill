@@ -3,7 +3,6 @@ local R = game:GetService("RunService")
 local VU = game:GetService("VirtualUser")
 local LP = P.LocalPlayer
 local on, afk = false, true
-local gy, n = nil, 0
 
 local g = Instance.new("ScreenGui")
 g.ResetOnSpawn = false
@@ -31,18 +30,6 @@ a.TextSize = 11
 a.Parent = g
 Instance.new("UICorner", a).CornerRadius = UDim.new(0, 8)
 
-local c = Instance.new("TextLabel")
-c.Size = UDim2.new(0, 150, 0, 22)
-c.Position = UDim2.new(1, -160, 0, 140)
-c.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
-c.BorderSizePixel = 0
-c.Text = "0"
-c.TextColor3 = Color3.fromRGB(0, 255, 100)
-c.Font = Enum.Font.GothamBold
-c.TextSize = 12
-c.Parent = g
-Instance.new("UICorner", c).CornerRadius = UDim.new(0, 8)
-
 local function f()
     local ch = LP.Character
     if not ch then return nil end
@@ -63,6 +50,17 @@ local function f()
     return cl
 end
 
+R.Stepped:Connect(function()
+    if not on then return end
+    local ch = LP.Character
+    if not ch then return end
+    for _, p in ipairs(ch:GetDescendants()) do
+        if p:IsA("BasePart") then
+            p.CanCollide = false
+        end
+    end
+end)
+
 R.Heartbeat:Connect(function()
     if not on then return end
     local ch = LP.Character
@@ -71,40 +69,19 @@ R.Heartbeat:Connect(function()
     local h = ch:FindFirstChild("Humanoid")
     if not r or not h or h.Health <= 0 then return end
 
-    if not gy then gy = r.Position.Y end
-
-    if r.Position.Y > gy + 15 then
-        r.CFrame = CFrame.new(r.Position.X, gy, r.Position.Z)
-        r.Velocity = Vector3.zero
-        return
-    end
-
-    if r.Position.Y < gy - 5 then
-        r.CFrame = CFrame.new(r.Position.X, gy, r.Position.Z)
-        r.Velocity = Vector3.zero
-        return
-    end
-
-    h.PlatformStand = true
-    r.Velocity = Vector3.zero
-    r.RotVelocity = Vector3.zero
-
     local co = f()
     if co then
-        local t = co.Position + Vector3.new(0, 1, 0)
-        local d = t - r.Position
+        local t = co.Position
+        local d = Vector3.new(t.X - r.Position.X, 0, t.Z - r.Position.Z)
         if d.Magnitude > 0.8 then
-            local flatD = Vector3.new(d.X, 0, d.Z)
-            if flatD.Magnitude > 0.1 then
-                r.CFrame = CFrame.new(r.Position + flatD.Unit * math.min(0.4, flatD.Magnitude))
-            end
-        else
-            n = n + 1
-            c.Text = tostring(n)
+            local newX = r.Position.X + d.Unit.X * math.min(0.4, d.Magnitude)
+            local newZ = r.Position.Z + d.Unit.Z * math.min(0.4, d.Magnitude)
+            r.CFrame = CFrame.new(newX, r.Position.Y, newZ)
         end
-    else
-        r.CFrame = CFrame.new(r.Position.X, gy, r.Position.Z)
     end
+
+    r.Velocity = Vector3.new(0, r.Velocity.Y, 0)
+    r.RotVelocity = Vector3.zero
 end)
 
 b.MouseButton1Click:Connect(function()
@@ -114,8 +91,11 @@ b.MouseButton1Click:Connect(function()
     if not on then
         local ch = LP.Character
         if ch then
-            local h = ch:FindFirstChild("Humanoid")
-            if h then h.PlatformStand = false end
+            for _, p in ipairs(ch:GetDescendants()) do
+                if p:IsA("BasePart") then
+                    p.CanCollide = true
+                end
+            end
         end
     end
 end)
