@@ -70,28 +70,40 @@ R.Heartbeat:Connect(function()
     local r = ch:FindFirstChild("HumanoidRootPart")
     local h = ch:FindFirstChild("Humanoid")
     if not r or not h or h.Health <= 0 then return end
+
     if not gy then gy = r.Position.Y end
+
+    if r.Position.Y > gy + 15 then
+        r.CFrame = CFrame.new(r.Position.X, gy, r.Position.Z)
+        r.Velocity = Vector3.zero
+        return
+    end
+
     if r.Position.Y < gy - 5 then
         r.CFrame = CFrame.new(r.Position.X, gy, r.Position.Z)
         r.Velocity = Vector3.zero
         return
     end
+
     h.PlatformStand = true
     r.Velocity = Vector3.zero
     r.RotVelocity = Vector3.zero
+
     local co = f()
     if co then
         local t = co.Position + Vector3.new(0, 1, 0)
         local d = t - r.Position
         if d.Magnitude > 0.8 then
-            r.CFrame = CFrame.new(r.Position + d.Unit * math.min(0.4, d.Magnitude))
-            gy = r.Position.Y
+            local flatD = Vector3.new(d.X, 0, d.Z)
+            if flatD.Magnitude > 0.1 then
+                r.CFrame = CFrame.new(r.Position + flatD.Unit * math.min(0.4, flatD.Magnitude))
+            end
         else
             n = n + 1
             c.Text = tostring(n)
         end
     else
-        r.CFrame = CFrame.new(r.Position)
+        r.CFrame = CFrame.new(r.Position.X, gy, r.Position.Z)
     end
 end)
 
